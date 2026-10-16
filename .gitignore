@@ -1,0 +1,6 @@
+includes/config.php
+uploads/
+feminicidio_db.sql
+debug-structure.php
+test-api.php
+*.pptx

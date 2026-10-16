@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API Chat</title>
+</head>
+<body>
+    <h1>Teste Manual da API</h1>
+    <button onclick="testSendMessage()">Testar Envio</button>
+    <button onclick="testGetMessages()">Testar Busca</button>
+    <div id="result"></div>
+
+    <script>
+        async function testSendMessage() {
+            const response = await fetch('includes/api/chat/send.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    complaint_id: 1,
+                    message: 'Teste manual da API',
+                    is_from_victim: false
+                })
+            });
+            const result = await response.json();
+            document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+        }
+
+        async function testGetMessages() {
+            const response = await fetch('includes/api/chat/messages.php?complaint_id=1&last_id=0');
+            const result = await response.json();
+            document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+        }
+    </script>
+</body>
+</html>
