@@ -115,6 +115,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span class="user-badge badge-admin">Administrador</span>
             </div>
 
+            <?php if (isset($_GET['reset'])): ?>
+                <div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
+                    Senha atualizada com sucesso! Já pode entrar.
+                </div>
+            <?php endif; ?>
+
             <?php if ($error): ?>
                 <div class="alert alert-danger" style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
                     <?php echo $error; ?>
@@ -138,6 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i class="fas fa-sign-in-alt"></i> Entrar
                     </button>
                 </div>
+
+                <div style="text-align: center; margin-top: 0.5rem;">
+                    <a href="forgot_password.php">Esqueci a minha senha</a>
+                </div>
             </form>
 
             <div style="text-align: center; margin-top: 1rem; color: var(--gray);">
@@ -148,6 +158,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
-   
+    
 </body>
 </html>
