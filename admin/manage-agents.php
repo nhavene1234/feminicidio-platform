@@ -110,12 +110,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch(PDOException $e) {
             $error = "Erro ao atualizar agente: " . $e->getMessage();
         }
+    } elseif ($action === 'reset_password') {
+        $agent_id = (int)$_POST['agent_id'];
+        $new_password = $_POST['new_password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+        
+        if (strlen($new_password) < 8) {
+            $error = "A nova senha deve ter pelo menos 8 caracteres.";
+        } elseif ($new_password !== $confirm_password) {
+            $error = "A nova senha e a confirmação não coincidem.";
+        } else {
+            try {
+                $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $stmt->execute([password_hash($new_password, PASSWORD_DEFAULT), $agent_id]);
+                
+                // Invalidar links de recuperação pendentes deste agente
+                try {
+                    $pdo->prepare("UPDATE password_resets SET used = 1 WHERE user_id = ?")->execute([$agent_id]);
+                } catch(PDOException $e) {
+                    // tabela password_resets pode não existir; ignorar
+                }
+                
+                header("Location: manage-agents.php?page=" . $current_page . "&pwd=1");
+                exit();
+            } catch(PDOException $e) {
+                $error = "Erro ao redefinir a senha: " . $e->getMessage();
+            }
+        }
     }
 }
 
 // Verificar se há mensagem de sucesso na URL
 if (isset($_GET['success'])) {
     $success = "Operação realizada com sucesso!";
+}
+if (isset($_GET['pwd'])) {
+    $success = "Senha redefinida com sucesso!";
 }
 ?>
 <!DOCTYPE html>
@@ -368,6 +398,7 @@ if (isset($_GET['success'])) {
                         <?php echo getUserTypeBadge($_SESSION['user_type']); ?>
                     </span>
                     <a href="../agents/dashboard.php" class="nav-link">Ver Denúncias</a>
+                    <a href="../agents/change_password.php" class="nav-link">Alterar Senha</a>
                     <a href="../agents/logout.php" class="nav-link">Sair</a>
                 </div>
             </div>
@@ -463,6 +494,11 @@ if (isset($_GET['success'])) {
                             <button onclick="openEditModal(<?php echo $agent['id']; ?>, '<?php echo addslashes($agent['name']); ?>', '<?php echo $agent['email']; ?>', '<?php echo $agent['user_type']; ?>', '<?php echo addslashes($agent['post']); ?>')" 
                                     class="btn-sm btn-warning">
                                 <i class="fas fa-edit"></i> Editar
+                            </button>
+                            
+                            <button onclick="openResetModal(<?php echo (int)$agent['id']; ?>, <?php echo htmlspecialchars(json_encode($agent['name']), ENT_QUOTES); ?>)" 
+                                    class="btn-sm btn-primary">
+                                <i class="fas fa-key"></i> Senha
                             </button>
                             
                             <form method="POST" style="display: inline;">
@@ -626,7 +662,34 @@ if (isset($_GET['success'])) {
         </div>
     </div>
 
-    
+    <!-- Modal Redefinir Senha -->
+    <div id="reset-password-modal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-key"></i> Redefinir Senha</h3>
+            <p style="margin-bottom: 1rem;">Agente: <strong id="reset_agent_name"></strong></p>
+            <form method="POST" onsubmit="return validateResetForm();">
+                <input type="hidden" name="action" value="reset_password">
+                <input type="hidden" name="agent_id" id="reset_agent_id">
+                
+                <div class="form-group">
+                    <label class="form-label">Nova senha * (mín. 8 caracteres)</label>
+                    <input type="password" name="new_password" id="reset_new_password" class="form-control" required minlength="8">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Confirmar nova senha *</label>
+                    <input type="password" name="confirm_password" id="reset_confirm_password" class="form-control" required minlength="8">
+                </div>
+                
+                <div class="form-group" style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Senha
+                    </button>
+                    <button type="button" onclick="closeModal('reset-password-modal')" class="btn btn-secondary">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         function openModal(modalId) {
@@ -644,6 +707,24 @@ if (isset($_GET['success'])) {
             document.getElementById('edit_user_type').value = userType;
             document.getElementById('edit_post').value = post;
             openModal('edit-agent-modal');
+        }
+        
+        function openResetModal(id, name) {
+            document.getElementById('reset_agent_id').value = id;
+            document.getElementById('reset_agent_name').textContent = name;
+            document.getElementById('reset_new_password').value = '';
+            document.getElementById('reset_confirm_password').value = '';
+            openModal('reset-password-modal');
+        }
+        
+        function validateResetForm() {
+            const a = document.getElementById('reset_new_password').value;
+            const b = document.getElementById('reset_confirm_password').value;
+            if (a !== b) {
+                alert('A nova senha e a confirmação não coincidem.');
+                return false;
+            }
+            return true;
         }
         
         // Fechar modais clicando fora

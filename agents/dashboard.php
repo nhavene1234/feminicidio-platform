@@ -177,7 +177,9 @@ try {
                     <a href="../admin/dashboard.php" class="nav-link"><i class="fas fa-cog"></i> Admin</a>
                     <?php endif; ?>
                     <a href="profile.php" class="nav-link"><i class="fas fa-user"></i> Perfil</a>
+                     <a href="change_password.php" class="nav-link">Alterar Senha</a>
                     <a href="logout.php" class="nav-link"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                   
                 </div>
             </div>
         </nav>
