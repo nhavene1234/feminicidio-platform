@@ -1,7 +1,6 @@
 <?php
 // public/index.php
-require_once dirname(__DIR__) . '/includes/config.php';
-
+require_once dirname(__DIR__) . '/Includes/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt">
